@@ -98,7 +98,7 @@ class Saliency_Sampler(nn.Module):
 
         return grid
 
-    def forward(self, x,p):
+    def forward(self, x):
 
         x_low = nn.AdaptiveAvgPool2d((self.input_size,self.input_size))(x)
         xs = self.localization(x_low)
@@ -114,14 +114,14 @@ class Saliency_Sampler(nn.Module):
 
         x_sampled = F.grid_sample(x, grid)
 
-        if random.random()>p:
-            s = random.randint(64, 224)
-            x_sampled = nn.AdaptiveAvgPool2d((s,s))(x_sampled)
-            x_sampled = nn.Upsample(size=(self.input_size_net,self.input_size_net),mode='bilinear')(x_sampled)
+        # if random.random()>p:
+        #     s = random.randint(64, 224)
+        #     x_sampled = nn.AdaptiveAvgPool2d((s,s))(x_sampled)
+        #     x_sampled = nn.Upsample(size=(self.input_size_net,self.input_size_net),mode='bilinear')(x_sampled)
 
         x = self.hi_res(x_sampled)
 
-        return x,x_sampled,xs
+        return x
 
 
 
