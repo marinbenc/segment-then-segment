@@ -133,7 +133,7 @@ def get_dataset_class(args):
 
 def get_model(args, dataset_class, device):
     if args.model == 'unet':
-        task_network = smp.Unet(in_channels=1, classes=1, activation='sigmoid')
+        task_network = smp.Unet(in_channels=2, classes=1)
         model = SpatialTransformer(task_network)
     return model
 

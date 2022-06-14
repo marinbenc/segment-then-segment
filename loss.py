@@ -19,8 +19,8 @@ class DiceLoss(nn.Module):
     def forward(self, y_pred, y_true):
         y_pred, y_theta = y_pred
 
-        # grid = F.affine_grid(y_theta, y_true.size())
-        # y_trans = F.grid_sample(y_true, grid)
+        grid = F.affine_grid(y_theta, y_true.size())
+        y_trans = F.grid_sample(y_true, grid)
         
         # salient = y_trans[y_trans > 0].sum()
         # non_salient = y_trans[y_trans <= 0].sum()
@@ -34,7 +34,7 @@ class DiceLoss(nn.Module):
 
         for i in range(y_pred.shape[1]):
           y_pred_ch = y_pred[:, i].contiguous().view(-1)
-          y_true_ch = y_true[:, i].contiguous().view(-1)
+          y_true_ch = y_trans[:, i].contiguous().view(-1)
           intersection = (y_pred_ch * y_true_ch).sum()
           dscs[i] = (2. * intersection + self.smooth) / (
               y_pred_ch.sum() + y_true_ch.sum() + self.smooth
@@ -47,4 +47,4 @@ class DiceLoss(nn.Module):
         #     plt.imshow(np.dstack((pred * 255, pred * 255, true * 255)))
         #     plt.show()
 
-        return 1. - torch.mean(dscs) + 0.5 * theta_loss
+        return 1. - torch.mean(dscs) + theta_loss

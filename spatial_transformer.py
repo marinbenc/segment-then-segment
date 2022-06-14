@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import segmentation_models_pytorch as smp
+from segmentation_models_pytorch.encoders import get_encoder
 
 class SpatialTransformer(nn.Module):
     def __init__(self, task_network, input_size=128):
@@ -21,20 +22,22 @@ class SpatialTransformer(nn.Module):
         self.iters = 0
 
         # Spatial transformer localization-network
-        self.localization = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=7),
-            nn.MaxPool2d(2, stride=2),
-            nn.ReLU(True),
-            nn.Conv2d(8, 10, kernel_size=5),
-            nn.MaxPool2d(2, stride=2),
-            nn.ReLU(True)
-        )
+        self.localization = get_encoder('resnet18', in_channels=1, depth=5)
+        
+        # nn.Sequential(
+        #     nn.Conv2d(1, 8, kernel_size=7),
+        #     nn.MaxPool2d(2, stride=2),
+        #     nn.ReLU(True),
+        #     nn.Conv2d(8, 10, kernel_size=5),
+        #     nn.MaxPool2d(2, stride=2),
+        #     nn.ReLU(True)
+        # )
 
         # Regressor for the 3 * 2 affine matrix
         self.fc_loc = nn.Sequential(
-            nn.Linear(10 * 28 * 28, 128),
+            nn.Linear(512 * 4 * 4, 2046),
             nn.ReLU(True),
-            nn.Linear(128, 3 * 2)
+            nn.Linear(2046, 3 * 2)
         )
 
         # Initialize the weights/bias with identity transformation
@@ -45,12 +48,12 @@ class SpatialTransformer(nn.Module):
 
     # Spatial transformer network forward function
     def stn(self, x, x_low):
-        xs = self.localization(x_low)
-        xs = xs.view(-1, 10 * 28 * 28)
+        xs = self.localization(x_low)[-1]
+        xs = xs.view(-1, 512 * 4 * 4)
         theta = self.fc_loc(xs)
 
-        theta[:, 1] = 0
-        theta[:, 3] = 0
+        theta[:, 1] = 0.
+        theta[:, 3] = 0.
 
         # theta[:, 0] = theta[:, 0].clone().clamp(0.2, 1.0)
         # theta[:, 4] = theta[:, 4].clone().clamp(0.2, 1.0)
@@ -68,34 +71,30 @@ class SpatialTransformer(nn.Module):
         # plt.imshow(x[0].detach().squeeze().cpu().numpy())
         # plt.show()
 
-
         return x, theta
 
     def forward(self, x):
         original_size = x.shape[-1]
         x_low = F.interpolate(x, size=self.input_size)
+
         x_trans, theta = self.stn(x, x_low)
         x_trans_low = F.interpolate(x_trans, size=self.input_size)
 
-        x = self.task_network(x_trans_low)
+        xs = torch.cat((x_low, x_trans_low), 1)
 
+        x = self.task_network(xs)
         x = F.interpolate(x, size=original_size)
-
-        last_row = torch.Tensor([[[0, 0, 1]]] * len(theta)).cuda()
-        theta_sq = torch.cat([theta, last_row], 1)
-        theta_inv = torch.linalg.inv(theta_sq)[:, :2]
-        grid = F.affine_grid(theta_inv, x.size())
-        x = F.grid_sample(x, grid)
 
         if self.iters % 1000 == 0:
 
             print(theta)
 
-            plt.imshow(x_low.squeeze().detach().cpu().numpy()[0])
-            plt.show()
+            for i in range(0):
+                plt.imshow(x_low.squeeze().detach().cpu().numpy()[i])
+                plt.show()
 
-            plt.imshow(x_trans_low.squeeze().detach().cpu().numpy()[0])
-            plt.show()
+                plt.imshow(x_trans_low.squeeze().detach().cpu().numpy()[i])
+                plt.show()
         
         self.iters += 1
         return x, theta
