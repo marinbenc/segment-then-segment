@@ -29,6 +29,7 @@ from saliency_sampler import Saliency_Sampler
 from saliency_network import saliency_network_resnet18
 
 from spatial_transformer import SpatialTransformer
+from double_unet import DoubleUnetSampler
 
 sys.path.append('data')
 from aa_dataset import AortaDataset
@@ -133,8 +134,7 @@ def get_dataset_class(args):
 
 def get_model(args, dataset_class, device):
     if args.model == 'unet':
-        task_network = smp.Unet(in_channels=2, classes=1)
-        model = SpatialTransformer(task_network)
+        model = DoubleUnetSampler()
     return model
 
 def data_loaders(args, dataset_class):

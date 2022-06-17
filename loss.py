@@ -2,8 +2,9 @@ import torch.nn as nn
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from torch.nn.functional import mse_loss
+from torch.nn.functional import mse_loss, binary_cross_entropy_with_logits as bce_loss
 import torch.nn.functional as F
+
 
 class DiceLoss(nn.Module):
 
@@ -17,24 +18,14 @@ class DiceLoss(nn.Module):
         return torch.abs((y_pred - y_true) ** pow).mean()
 
     def forward(self, y_pred, y_true):
-        y_pred, y_theta = y_pred
+        y_pred_1, y_pred_2 = y_pred
 
-        grid = F.affine_grid(y_theta, y_true.size())
-        y_trans = F.grid_sample(y_true, grid)
-        
-        # salient = y_trans[y_trans > 0].sum()
-        # non_salient = y_trans[y_trans <= 0].sum()
-        # salience = salient / (salient + non_salient)
+        bce = bce_loss(y_pred_1, y_true, pos_weight=torch.ones(1).cuda() * 2.)
+        dscs = torch.zeros(y_pred_2.shape[1])
 
-        identity_theta = (torch.eye(2, 3, device='cuda') * 0.5).unsqueeze(0).repeat((len(y_theta), 1, 1))
-        theta_loss = DiceLoss.abs_exp_loss(y_theta, identity_theta, 3)
-
-        assert y_pred.size() == y_true.size()
-        dscs = torch.zeros(y_pred.shape[1])
-
-        for i in range(y_pred.shape[1]):
-          y_pred_ch = y_pred[:, i].contiguous().view(-1)
-          y_true_ch = y_trans[:, i].contiguous().view(-1)
+        for i in range(y_pred_2.shape[1]):
+          y_pred_ch = y_pred_2[:, i].contiguous().view(-1)
+          y_true_ch = y_true[:, i].contiguous().view(-1)
           intersection = (y_pred_ch * y_true_ch).sum()
           dscs[i] = (2. * intersection + self.smooth) / (
               y_pred_ch.sum() + y_true_ch.sum() + self.smooth
@@ -47,4 +38,4 @@ class DiceLoss(nn.Module):
         #     plt.imshow(np.dstack((pred * 255, pred * 255, true * 255)))
         #     plt.show()
 
-        return 1. - torch.mean(dscs) + theta_loss
+        return (1. - torch.mean(dscs)) * 0.5 + bce * 0.5
