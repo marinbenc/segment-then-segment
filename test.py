@@ -69,22 +69,23 @@ def main(args):
   precisions = np.array([precision(all_predicted_y2[i], all_ys[i]) for i in range(len(all_ys))])
   recalls = np.array([recall(all_predicted_y2[i], all_ys[i]) for i in range(len(all_ys))])
 
+
   # print(dscs)
 
-  sorting = np.argsort(dscs)
-  for idx in sorting:
-    print(bboxes[idx])
-    plt.imshow(all_ys[idx])
-    plt.show()
-    l, t, w, h = bboxes[idx][0]
-    viz_img = cv.rectangle(all_xs[idx], (l, t), (l + w, t + h), round(all_xs[idx].max()), 5)
-    plt.imshow(viz_img)
-    plt.show()
-    thresh = lerp(all_predicted_y1[idx].mean(), all_predicted_y1[idx].max(), 0.25)
-    plt.imshow(all_predicted_y1[idx] > thresh)
-    plt.show()
-    plt.imshow(all_predicted_y2[idx])
-    plt.show()
+  # sorting = np.argsort(dscs)
+  # for idx in sorting:
+  #   print(bboxes[idx])
+  #   plt.imshow(all_ys[idx])
+  #   plt.show()
+  #   l, t, w, h = bboxes[idx][0]
+  #   viz_img = cv.rectangle(all_xs[idx], (l, t), (l + w, t + h), round(all_xs[idx].max()), 5)
+  #   plt.imshow(viz_img)
+  #   plt.show()
+  #   thresh = lerp(all_predicted_y1[idx].mean(), all_predicted_y1[idx].max(), 0.25)
+  #   plt.imshow(all_predicted_y1[idx] > thresh)
+  #   plt.show()
+  #   plt.imshow(all_predicted_y2[idx])
+  #   plt.show()
 
   print(f'DSC: {dscs.mean():.4f} | IoU: {ious.mean():.4f} | prec: {precisions.mean():.4f} | rec: {recalls.mean():.4f}')
   return dscs.mean(), ious.mean(), precisions.mean(), recalls.mean()

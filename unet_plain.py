@@ -5,7 +5,7 @@ import torch.nn as nn
 
 class UNet(nn.Module):
 
-  def __init__(self, device, in_channels=3, out_channels=1, init_features=32, sigmoid_activation=False, decoder_multipler=1):
+  def __init__(self, device, in_channels=3, out_channels=1, init_features=32, sigmoid_activation=False, additional_skips=False):
     super(UNet, self).__init__()
     self.device = device
     self.sigmoid_activation = sigmoid_activation
@@ -22,29 +22,31 @@ class UNet(nn.Module):
 
     self.bottleneck = UNet._block(features * 8, features * 16, name="bottleneck")
 
+    skips_multiplier = 3 if additional_skips else 2
+
     self.upconv4 = nn.ConvTranspose2d(
       features * 16, features * 8, kernel_size=2, stride=2
     )
-    self.decoder4 = UNet._block((features * 8) * 2  * decoder_multipler, features * 8, name="dec4")
+    self.decoder4 = UNet._block((features * 8) * skips_multiplier, features * 8, name="dec4")
     self.upconv3 = nn.ConvTranspose2d(
       features * 8, features * 4, kernel_size=2, stride=2
     )
 
-    self.decoder3 = UNet._block((features * 4) * 2 * decoder_multipler, features * 4, name="dec3")
+    self.decoder3 = UNet._block((features * 4) * skips_multiplier, features * 4, name="dec3")
     self.upconv2 = nn.ConvTranspose2d(
       features * 4, features * 2, kernel_size=2, stride=2
     )
-    self.decoder2 = UNet._block((features * 2) * 2, features * 2, name="dec2")
+    self.decoder2 = UNet._block((features * 2) * skips_multiplier, features * 2, name="dec2")
     self.upconv1 = nn.ConvTranspose2d(
       features * 2, features, kernel_size=2, stride=2
     )
-    self.decoder1 = UNet._block(features * 2  * decoder_multipler, features, name="dec1")
+    self.decoder1 = UNet._block(features * skips_multiplier, features, name="dec1")
 
     self.conv = nn.Conv2d(
       in_channels=features, out_channels=out_channels, kernel_size=1
     )
 
-  def forward(self, x, additional_skips=[[],[],[],[]]):
+  def forward(self, x, additional_skips=[torch.Tensor([]).cuda()] * 4):
     enc1 = self.encoder1(x)
     enc2 = self.encoder2(self.pool1(enc1))
     enc3 = self.encoder3(self.pool2(enc2))

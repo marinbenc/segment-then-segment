@@ -32,11 +32,7 @@ class DoubleUnetSampler(nn.Module):
         self.iters = 0
 
         self.network_1 = UNet('cuda', in_channels=1, out_channels=1, sigmoid_activation=False)
-        self.network_2 = UNet('cuda', in_channels=1, out_channels=1, sigmoid_activation=True, decoder_multipler=2)
-
-        self.network_2.decoder = UnetDecoder(
-          encoder_channels=np.array(self.network_1.encoder.out_channels) * 2,
-          decoder_channels=[256, 128, 64, 32, 16])
+        self.network_2 = UNet('cuda', in_channels=1, out_channels=1, sigmoid_activation=True, additional_skips=True)
     
     def forward(self, x):
       # network 1
@@ -100,11 +96,7 @@ class DoubleUnetSampler(nn.Module):
       sampled = torch.stack(crops)
 
       # network 2
-      output2 = self.network_2(sampled, skips1)
-      features_all = [torch.cat([f1, f2], 1) for f1, f2 in zip(features1, features2)]
-      
-      decoder2_output = self.network_2.decoder(*features_all)
-      output2 = self.network_2.segmentation_head(decoder2_output)
+      output2 = self.network_2(sampled, skips1)      
 
       # for i in range(output2.shape[0]):
       #   if output2[i].sum() < 0.1:
