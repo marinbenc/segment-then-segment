@@ -30,12 +30,13 @@ from saliency_network import saliency_network_resnet18
 
 from spatial_transformer import SpatialTransformer
 from double_unet import DoubleUnetSampler
+from unet_plain import UNet
 
 sys.path.append('data')
 from aa_dataset import AortaDataset
 
 dataset_choices = ['aa']
-model_choices = ['unet']
+model_choices = ['unet', 'sampler']
 
 def main(args):
     makedirs(args)
@@ -133,8 +134,10 @@ def get_dataset_class(args):
     return mapping[args.dataset]
 
 def get_model(args, dataset_class, device):
-    if args.model == 'unet':
+    if args.model == 'sampler':
         model = DoubleUnetSampler()
+    if args.model == 'unet':
+        model = UNet('cuda', in_channels=1, out_channels=1, sigmoid_activation=True, input_size=128)
     return model
 
 def data_loaders(args, dataset_class):

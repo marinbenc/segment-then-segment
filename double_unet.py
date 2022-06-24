@@ -45,10 +45,11 @@ class DoubleUnetSampler(nn.Module):
 
       # sample output1
 
+      output1 = torch.sigmoid(output1)
       output1_np = output1.detach().cpu().numpy()
 
       # [[x, y, w, h]]
-      bounding_rects = [cv.boundingRect(np.uint8(img[0] > lerp(img[0].mean(), img[0].max(), 0.5))) for img in output1_np]
+      bounding_rects = [cv.boundingRect(np.uint8(img[0] > 0.05)) for img in output1_np]
       bounding_rects_scaled = bounding_rects.copy()
 
       for i in range(len(bounding_rects)):
@@ -119,11 +120,11 @@ class DoubleUnetSampler(nn.Module):
       output2_inverse = torch.stack(output2_inverse)
 
       # back to original size
-      output1 = F.interpolate(output1, original_size, mode='bicubic')
-      output2_inverse = F.interpolate(output2_inverse, original_size, mode='bicubic')
+      output1 = F.interpolate(output1, original_size)
+      output2_inverse = F.interpolate(output2_inverse, original_size)
 
       # self.iters += 1
-      # if self.iters % 1000 == 0:
+      # if self.iters % 10 == 0:
       #   for i in range(len(x_low)):
       #     plt.imshow(x_low[i][0].detach().cpu().numpy())
       #     plt.show()

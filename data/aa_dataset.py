@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import Dataset
 import numpy as np
 import cv2 as cv
+import matplotlib.pyplot as plt
 
 import albumentations as A
 import torchvision.transforms.functional as F
@@ -30,7 +31,7 @@ class AortaDataset(Dataset):
     transform = A.Compose([
       A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=15, p=.5),
       A.HorizontalFlip(p=0.3),
-    ], keypoint_params=A.KeypointParams(format='xy'))
+    ])
     return transform
 
   @staticmethod
@@ -57,10 +58,10 @@ class AortaDataset(Dataset):
     all_files = [f for f in all_files if hospital_id in f]
     self.file_names = all_files
 
-    # if folder == 'train':
-    #   self.transform = AortaDataset.get_augmentation()
-    # else:
-    #   self.transform = None
+    if folder == 'train':
+      self.transform = AortaDataset.get_augmentation()
+    else:
+      self.transform = None
     
   def __len__(self):
     # return 16 # overfit single batch
@@ -87,9 +88,9 @@ class AortaDataset(Dataset):
     scan -= GLOBAL_PIXEL_MEAN
 
     if self.transform is not None:
-      transformed = self.transform(image=scan[0], mask=mask[0])
-      mask[0] = transformed['mask']
-      scan[0] = transformed['image']
+      transformed = self.transform(image=scan, mask=mask)
+      mask = transformed['mask']
+      scan = transformed['image']
 
     volume_tensor = torch.from_numpy(scan).float()
     mask_tensor = torch.from_numpy(mask).float()

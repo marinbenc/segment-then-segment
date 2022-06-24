@@ -17,7 +17,8 @@ class DiceMetric(Metric):
 
     def update(self, output):
       y_pred, y = output
-      y_pred, y_theta = y_pred
+      if len(y_pred) == 2:
+        y_pred, y_theta = y_pred
       y_pred = y_pred.squeeze().detach().cpu().numpy()
       y = y.squeeze().detach().cpu().numpy()
       # plt.imshow(np.dstack((y_pred[0] * 255, y_pred[0] * 255, y[0] * 255)))

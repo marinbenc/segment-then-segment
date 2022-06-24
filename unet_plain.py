@@ -2,13 +2,15 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class UNet(nn.Module):
 
-  def __init__(self, device, in_channels=3, out_channels=1, init_features=32, sigmoid_activation=False, additional_skips=False):
+  def __init__(self, device, in_channels=3, out_channels=1, init_features=32, sigmoid_activation=False, additional_skips=False, input_size=None):
     super(UNet, self).__init__()
     self.device = device
     self.sigmoid_activation = sigmoid_activation
+    self.input_size = input_size
     
     features = init_features
     self.encoder1 = UNet._block(in_channels, features, name="enc1")
@@ -47,6 +49,11 @@ class UNet(nn.Module):
     )
 
   def forward(self, x, additional_skips=[torch.Tensor([]).cuda()] * 4):
+
+    if self.input_size is not None:
+      original_size = x.shape[-1]
+      x = F.interpolate(x, self.input_size)
+
     enc1 = self.encoder1(x)
     enc2 = self.encoder2(self.pool1(enc1))
     enc3 = self.encoder3(self.pool2(enc2))
@@ -70,9 +77,14 @@ class UNet(nn.Module):
     dec1 = self.decoder1(dec1)
 
     if self.sigmoid_activation:
-      return torch.sigmoid(self.conv(dec1))
+      y = torch.sigmoid(self.conv(dec1))
     else:
-      return self.conv(dec1), skips
+      y = self.conv(dec1), skips
+
+    if self.input_size is not None:
+      y = F.interpolate(y, original_size)
+
+    return y
 
   @staticmethod
   def _block(in_channels, features, name):
