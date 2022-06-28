@@ -23,9 +23,6 @@ class AortaDataset(Dataset):
   in_channels = 3
   out_channels = 3
 
-  height = 256
-  width = 256
-
   @staticmethod
   def get_augmentation():
     transform = A.Compose([
