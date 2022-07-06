@@ -37,6 +37,7 @@ from aa_dataset import AortaDataset
 
 dataset_choices = ['aa']
 model_choices = ['unet', 'sampler']
+loss_choices = ['dsc', 'bce']
 
 def main(args):
     makedirs(args)
@@ -51,7 +52,10 @@ def main(args):
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    criterion = DiceLoss()
+    if args.loss == 'dsc':
+        criterion = DiceLoss()
+    elif args.loss == 'bce':
+        pass # TODO
 
     metrics = {
       'dsc': DiceMetric(device=device),
@@ -68,17 +72,17 @@ def main(args):
 
     best_dsc = 0
 
-    # @trainer.on(Events.GET_BATCH_COMPLETED(once=1))
-    # def plot_batch(engine):
-    #     x, y = engine.state.batch
-    #     images = [x[0], y[0]]
-    #     for image in images:
-    #         if image.shape[0] > 1:
-    #             image = image.numpy()
-    #             image = image.transpose(1, 2, 0)
-    #             image += 0.5
-    #         plt.imshow(image.squeeze())
-    #         plt.show()
+    @trainer.on(Events.GET_BATCH_COMPLETED(once=1))
+    def plot_batch(engine):
+        x, y = engine.state.batch
+        images = [x[0], y[0]]
+        for image in images:
+            if image.shape[0] > 1:
+                image = image.numpy()
+                image = image.transpose(1, 2, 0)
+                image += 0.5
+            plt.imshow(image.squeeze())
+            plt.show()
 
     @trainer.on(Events.EPOCH_COMPLETED)
     def compute_metrics(engine):
@@ -167,9 +171,11 @@ def data_loaders(args, dataset_class):
 def datasets(args, dataset_class):
     train = dataset_class(
       folder='train',
+      cropped=args.cropped
     )
     valid = dataset_class(
       folder='valid',
+      cropped=args.cropped
     )
     return train, valid
 
@@ -210,6 +216,9 @@ if __name__ == '__main__':
         '--model', type=str, choices=model_choices, default='unet', help='which model architecture to use'
     )
     parser.add_argument(
+        '--loss', type=str, choices=loss_choices, default='dsc', help='which loss to use'
+    )
+    parser.add_argument(
         '--dataset', type=str, choices=dataset_choices, default='liver', help='which dataset to use'
     )
     parser.add_argument(
@@ -219,9 +228,9 @@ if __name__ == '__main__':
         help='number of workers for data loading (default: 4)',
     )
     parser.add_argument(
-        '--polar', 
+        '--cropped', 
         action='store_true',
-        help='use polar coordinates')
+        help='train on cropped images')
     parser.add_argument(
         '--percent',
         type=float,

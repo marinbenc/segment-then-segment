@@ -8,7 +8,9 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 
 import albumentations as A
-import torchvision.transforms.functional as F
+from torchvision.transforms.functional import center_crop
+import torchvision.transforms.functional as T
+import torch.nn.functional as F
 
 sys.path.append('..')
 import helpers as h
@@ -40,12 +42,14 @@ class AortaDataset(Dataset):
     patient_names.sort()
     return patient_names
 
-  def __init__(self, folder, hospital_id='D'):
+  def __init__(self, folder, hospital_id='D', cropped=False, input_size=128):
     '''
     folder: one of 'train', 'valid', 'test'
     hospital_id: one of 'D', 'K' or 'R'
     '''
     self.directory = p.join('data', folder)
+    self.cropped = cropped
+    self.input_size = input_size
 
     self.transform = None
 
@@ -63,6 +67,35 @@ class AortaDataset(Dataset):
   def __len__(self):
     # return 16 # overfit single batch
     return len(self.file_names)
+
+  def fix_bbox(self, bbox, size, padding=32):
+    l, t, w, h = bbox
+
+    # make rect square
+    if w < h:
+      d = h - w
+      l -= d // 2
+      w = h
+    elif h < w:
+      d = w - h
+      t -= d // 2
+      h = w
+
+    # add padding
+    h += padding * 2
+    w += padding * 2
+    l -= padding
+    t -= padding
+
+    # make sure the bbox is witihin image bounds
+    if l + w > size - 1:
+      w -= l + w - size - 1
+      h = w
+    if h + t > size - 1:
+      h -= h + t - size - 1
+      w = h
+    
+    return l, t, w, h
 
   def __getitem__(self, idx):
     current_slice_file = self.file_names[idx]
@@ -92,7 +125,16 @@ class AortaDataset(Dataset):
     volume_tensor = torch.from_numpy(scan).float()
     mask_tensor = torch.from_numpy(mask).float()
 
-    volume_tensor = F.center_crop(volume_tensor, (512, 512))
-    mask_tensor = F.center_crop(mask_tensor, (512, 512))
+    volume_tensor = center_crop(volume_tensor, (512, 512))
+    mask_tensor = center_crop(mask_tensor, (512, 512))
+
+    if self.cropped:
+      bbox = cv.boundingRect(np.uint8(mask_tensor[0].numpy() > 0.05))
+      l, t, w, h = self.fix_bbox(bbox, 512)
+      volume_tensor = T.crop(volume_tensor, t, l, w, h)
+      mask_tensor = T.crop(mask_tensor, t, l, w, h)
+
+    volume_tensor = F.interpolate(volume_tensor.unsqueeze(0), self.input_size)[0]
+    mask_tensor = F.interpolate(mask_tensor.unsqueeze(0), self.input_size)[0]
 
     return volume_tensor, mask_tensor

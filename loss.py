@@ -18,11 +18,11 @@ class DiceLoss(nn.Module):
         return torch.abs((y_pred - y_true) ** pow).mean()
 
     def forward(self, y_pred, y_true):
-        if not isinstance(y_pred, np.ndarray):
-            y_pred_1, y_pred_2 = y_pred
-            bce = bce_loss(y_pred_1, y_true, pos_weight=torch.ones(1).cuda() * 200.)
-        else:
-            y_pred_2 = y_pred
+        # if not isinstance(y_pred, np.ndarray):
+        #     y_pred_1, y_pred_2 = y_pred
+        #     bce = bce_loss(y_pred_1, y_true, pos_weight=torch.ones(1).cuda() * 200.)
+        # else:
+        y_pred_2 = y_pred
 
         dscs = torch.zeros(y_pred_2.shape[1])
 
@@ -41,7 +41,7 @@ class DiceLoss(nn.Module):
         #     plt.imshow(np.dstack((pred * 255, pred * 255, true * 255)))
         #     plt.show()
 
-        if not isinstance(y_pred, np.ndarray):
-            return (1. - torch.mean(dscs)) * 0.5 + bce * 0.5
-        else:
-            return (1. - torch.mean(dscs))
+        # if not isinstance(y_pred, np.ndarray):
+        #     return (1. - torch.mean(dscs)) * 0.5 + bce * 0.5
+        # else:
+        return (1. - torch.mean(dscs))
