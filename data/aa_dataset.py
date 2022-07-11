@@ -50,6 +50,9 @@ def expand_bbox(bbox, size, padding=32):
     h -= h + t - size[1] - 1
     w = h
   
+  l = max(0, l)
+  t = max(0, t)
+  
   return l, t, w, h
 
 def get_bboxes(img):
@@ -59,6 +62,7 @@ def get_bboxes(img):
   bboxes = []
   for i in range(1, count):
     bbox = cv.boundingRect(np.uint8(label == i))
+    bbox = expand_bbox(bbox, img.shape[-2:])
     bboxes.append(bbox)
   return bboxes
 
@@ -155,7 +159,6 @@ class AortaDataset(Dataset):
       mask = transformed['mask']
       scan = transformed['image']
       bboxes = np.array(transformed['bboxes'], dtype=np.int)
-      bboxes = np.array([expand_bbox(bbox, mask.shape[-2:]) for bbox in bboxes], dtype=np.int)
 
     # viz_img = mask.copy()
     # for (l, t, w, h) in bboxes:
@@ -168,8 +171,8 @@ class AortaDataset(Dataset):
 
     return volume_tensor, mask_tensor, bboxes
 
-  def get_crops(self, idx):
-    volume, mask, bboxes = self.get_file_data(idx)
+  def get_crops_for_proposal(self, volume, mask, proposal, bboxes=None):
+    bboxes = get_bboxes(proposal) if bboxes is None else bboxes
 
     crops = []
     for bbox in bboxes:
@@ -178,6 +181,11 @@ class AortaDataset(Dataset):
       mask_cropped = T.crop(mask, t, l, w, h)
       crops.append((volume_cropped, mask_cropped, bbox))
     
+    return crops
+
+  def get_crops(self, idx):
+    volume, mask, bboxes = self.get_file_data(idx)
+    crops = self.get_crops_for_proposal(volume, mask, mask, bboxes)
     return crops
 
   def __getitem__(self, idx):
