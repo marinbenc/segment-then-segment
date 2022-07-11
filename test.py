@@ -12,25 +12,31 @@ import train
 from train import get_model
 from helpers import dsc, iou, precision, recall
 
+def run_prediction(model, x, device):
+  x = x.to(device)
+  prediction = model(x.unsqueeze(0).detach())
+  prediction = prediction.squeeze(0).squeeze(0).detach().cpu().numpy()
+  return prediction
+
 def get_predictions(model, dataset, device):
   all_xs = []
   all_ys = []
   all_predicted_y1 = []
-  all_predicted_y2 = []
-  all_bboxes = []
+  #all_predicted_y2 = []
+  #all_bboxes = []
 
   with torch.no_grad():
     for (x, y) in dataset:
       x = x.to(device)
       prediction = model(x.unsqueeze(0).detach())
-      all_bboxes.append(np.array(model.last_bounding_rects))
+      #all_bboxes.append(np.array(model.last_bounding_rects))
 
-      predicted_y1, predicted_y2 = prediction
-      predicted_y1 = predicted_y1.squeeze(0).squeeze(0).detach().cpu().numpy()
-      predicted_y2 = predicted_y2.squeeze(0).squeeze(0).detach().cpu().numpy()
+      #predicted_y1, predicted_y2 = prediction
+      predicted_y1 = prediction.squeeze(0).squeeze(0).detach().cpu().numpy()
+      #predicted_y2 = predicted_y2.squeeze(0).squeeze(0).detach().cpu().numpy()
 
       all_predicted_y1.append(predicted_y1)
-      all_predicted_y2.append(predicted_y2)
+      #all_predicted_y2.append(predicted_y2)
 
       x = x.squeeze(0).detach().cpu().numpy()
       all_xs.append(x)
@@ -45,7 +51,7 @@ def get_predictions(model, dataset, device):
       # ax2.set_title('Predicted')
       # plt.show()
   
-  return all_xs, all_ys, all_predicted_y1, all_predicted_y2, all_bboxes
+  return all_xs, all_ys, all_predicted_y1#, all_predicted_y2, all_bboxes
 
 def lerp(a, b, c):
   return c * a + (1 - c) * b
@@ -54,7 +60,7 @@ def main(args):
   device = torch.device('cpu' if not torch.cuda.is_available() else 'cuda')
   
   dataset_class = train.get_dataset_class(args)
-  dataset = dataset_class('valid')
+  dataset = dataset_class('valid', cropped=args.cropped)
 
   model = get_model(args, dataset_class, device)
   model.to(device)
@@ -62,12 +68,37 @@ def main(args):
   model.eval()
   model.train(False)
 
-  all_xs, all_ys, all_predicted_y1, all_predicted_y2, bboxes = get_predictions(model, dataset, device)
+  all_ys = []
+  all_predicted_ys = []
 
-  dscs = np.array([dsc(all_predicted_y2[i], all_ys[i]) for i in range(len(all_ys))])
-  ious = np.array([iou(all_predicted_y2[i], all_ys[i]) for i in range(len(all_ys))])
-  precisions = np.array([precision(all_predicted_y2[i], all_ys[i]) for i in range(len(all_ys))])
-  recalls = np.array([recall(all_predicted_y2[i], all_ys[i]) for i in range(len(all_ys))])
+  for i in range(len(dataset)):
+    _, y, _ = dataset.get_file_data(i)
+    y = y.squeeze().detach().cpu().numpy()
+
+    if args.cropped:
+      y_pred = np.zeros_like(y)
+
+      crops = dataset.get_crops(i)
+      for (x, _, bbox) in crops:
+        l, t, w, h = bbox
+        y_pred_crop = run_prediction(model, x, device)
+        y_pred_crop = cv.resize(y_pred_crop, (w, h), cv.INTER_LINEAR)
+
+        y_pred_crop[y_pred_crop < 0.5] = 0
+        y_pred_crop[y_pred_crop >= 0.5] = 1
+        y_pred[t:t+h, l:l+w] = np.logical_or(y_pred[t:t+h, l:l+w], y_pred_crop)
+    else:
+      x, _ = dataset[i]
+      y_pred = run_prediction(model, x, device)
+      y_pred = cv.resize(y_pred, y.shape[-2:], cv.INTER_LINEAR)
+    
+    all_ys.append(y)
+    all_predicted_ys.append(y_pred)
+
+  dscs = np.array([dsc(all_predicted_ys[i], all_ys[i]) for i in range(len(all_ys))])
+  ious = np.array([iou(all_predicted_ys[i], all_ys[i]) for i in range(len(all_ys))])
+  precisions = np.array([precision(all_predicted_ys[i], all_ys[i]) for i in range(len(all_ys))])
+  recalls = np.array([recall(all_predicted_ys[i], all_ys[i]) for i in range(len(all_ys))])
 
   plt.hist(dscs, bins=100)
   plt.ylabel('DSC')
@@ -107,9 +138,9 @@ if __name__ == '__main__':
     '--dataset', type=str, choices=train.dataset_choices, default='liver', help='dataset type'
   )
   parser.add_argument(
-      '--polar', 
+      '--cropped', 
       action='store_true',
-      help='use polar coordinates')
+      help='use crops')
 
   args = parser.parse_args()
   main(args)
