@@ -97,20 +97,12 @@ def main(args):
 
   print(f'DSC: {dscs.mean():.4f} | IoU: {ious.mean():.4f} | prec: {precisions.mean():.4f} | rec: {recalls.mean():.4f}')
   
-  # sorting = np.argsort(dscs)
-  # for idx in sorting:
-  #   print(bboxes[idx])
-  #   plt.imshow(all_ys[idx])
-  #   plt.show()
-  #   l, t, w, h = bboxes[idx][0]
-  #   viz_img = cv.rectangle(all_xs[idx], (l, t), (l + w, t + h), round(all_xs[idx].max()), 5)
-  #   plt.imshow(viz_img)
-  #   plt.show()
-  #   thresh = all_predicted_y1[idx]
-  #   plt.imshow(thresh > 0.05)
-  #   plt.show()
-  #   plt.imshow(all_predicted_y2[idx])
-  #   plt.show()
+  sorting = np.argsort(dscs)[::-1]
+  for idx in sorting:
+    plt.imshow(all_ys[idx])
+    plt.show()
+    plt.imshow(all_predicted_ys_cropped[idx])
+    plt.show()
   
   return dscs.mean(), ious.mean(), precisions.mean(), recalls.mean()
 
