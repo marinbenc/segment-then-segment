@@ -23,16 +23,9 @@ from ignite.contrib.metrics.regression import MedianAbsolutePercentageError
 import helpers as h
 from loss import DiceLoss
 from dice_metric import DiceMetric
-
-sys.path.append('saliency-sampler')
-from saliency_sampler import Saliency_Sampler
-from saliency_network import saliency_network_resnet18
-
-from spatial_transformer import SpatialTransformer
-from double_unet import DoubleUnetSampler
 from unet_plain import UNet
 
-sys.path.append('data')
+sys.path.append('data/aorta')
 from aa_dataset import AortaDataset
 
 dataset_choices = ['aa']
