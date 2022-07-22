@@ -86,11 +86,6 @@ def main(args):
       crops = dataset.get_crops(i)
       for (x, _, bbox) in crops:
         l, t, w, h = bbox
-
-        print(w, h)
-
-        plt.imshow(x.transpose(0, 2).numpy().astype(np.uint8))
-        plt.show()
         y_pred_crop = run_prediction(model, x, device, dataset)
         y_pred_crop = cv.resize(y_pred_crop, (w, h), cv.INTER_LINEAR)
         y_pred_crop[y_pred_crop < 0.5] = 0

@@ -39,13 +39,15 @@ def expand_bbox(bbox, size, padding=32):
   
   return l, t, w, h
 
-def get_bboxes(img, padding=32):
+def get_bboxes(img, padding, augmentation_size=0):
   count, label = cv.connectedComponents((img * 255).astype(np.uint8))
   
   # [(left, top, width, height)]
   bboxes = []
   for i in range(1, count):
     bbox = cv.boundingRect(np.uint8(label == i))
+    bbox_augmentation = np.random.randint(-augmentation_size, augmentation_size + 1, size=4)
+    bbox = np.array(bbox) + bbox_augmentation
     bbox = expand_bbox(bbox, img.shape[-2:], padding)
     bboxes.append(bbox)
   return bboxes
@@ -62,16 +64,17 @@ class CropDataset(Dataset):
     ])
     return transform
 
-  def __init__(self, folder, cropped=False, input_size=128, center_augmentation=False, padding=32):
+  def __init__(self, folder, cropped=False, input_size=128):
     self.cropped = cropped
     self.cropped = cropped
     self.input_size = input_size
-    self.center_augmentation = center_augmentation
-    self.padding = padding
+    self.padding = input_size // 4
+    self.bbox_augmentation_size = self.padding if folder == 'train' else 0
+    np.random.seed(42)
 
   def get_file_data(self, idx):
     scan, mask = self.get_img_mask(idx)
-    bboxes = get_bboxes(mask, self.padding)
+    bboxes = get_bboxes(mask, self.padding, self.bbox_augmentation_size)
 
     # viz_img = mask.copy()
     # for (l, t, w, h) in bboxes:
@@ -101,7 +104,7 @@ class CropDataset(Dataset):
     return volume_tensor, mask_tensor, bboxes
 
   def get_crops_for_proposal(self, volume, mask, proposal, bboxes=None):
-    bboxes = get_bboxes(proposal, self.padding) if bboxes is None else bboxes
+    bboxes = get_bboxes(proposal, self.padding, self.bbox_augmentation_size) if bboxes is None else bboxes
 
     crops = []
     for bbox in bboxes:

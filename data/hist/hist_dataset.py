@@ -37,12 +37,11 @@ class HistDataset(CropDataset):
     ], bbox_params=A.BboxParams(format='coco', label_fields=['labels'], min_area=10))
     return transform
 
-
-  def __init__(self, folder, cropped=False, input_size=64, center_augmentation=False):
+  def __init__(self, folder, cropped=False, input_size=64):
     '''
     folder: one of 'train', 'valid', 'test'
     '''
-    super().__init__(folder, cropped, input_size, padding=8, center_augmentation=center_augmentation)
+    super().__init__(folder, cropped, input_size)
     self.directory = p.join('data', 'hist', folder)
 
     all_files = h.listdir(p.join(self.directory, 'label'))

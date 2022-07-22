@@ -35,12 +35,12 @@ class AortaDataset(CropDataset):
     patient_names.sort()
     return patient_names
 
-  def __init__(self, folder, hospital_id='D', cropped=False, input_size=128, center_augmentation=False):
+  def __init__(self, folder, hospital_id='D', cropped=False, input_size=128):
     '''
     folder: one of 'train', 'valid', 'test'
     hospital_id: one of 'D', 'K' or 'R'
     '''
-    super().__init__(folder, cropped, input_size, center_augmentation)
+    super().__init__(folder, cropped, input_size)
     self.directory = p.join('data', 'aorta', folder)
 
     all_files = h.listdir(p.join(self.directory, 'label'))
