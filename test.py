@@ -7,14 +7,19 @@ import numpy as np
 import torch
 import cv2 as cv
 from skimage.filters import threshold_otsu
+import torch.nn.functional as F
+
 
 import train
 from train import get_model
 from helpers import dsc, iou, precision, recall
 
-def run_prediction(model, x, device):
+import torch.nn.functional as F
+
+def run_prediction(model, x, device, dataset):
   x = x.to(device)
-  prediction = model(x.unsqueeze(0).detach())
+  x = F.interpolate(x.unsqueeze(0), dataset.input_size)
+  prediction = model(x)
   prediction = prediction.squeeze(0).squeeze(0).detach().cpu().numpy()
   return prediction
 
@@ -60,7 +65,7 @@ def main(args):
   device = torch.device('cpu' if not torch.cuda.is_available() else 'cuda')
   
   dataset_class = train.get_dataset_class(args)
-  dataset = dataset_class('valid', cropped=args.cropped)
+  dataset = dataset_class('valid', cropped=args.cropped, input_size=args.input_size)
 
   model = get_model(args, dataset_class, device)
   model.to(device)
@@ -81,16 +86,25 @@ def main(args):
       crops = dataset.get_crops(i)
       for (x, _, bbox) in crops:
         l, t, w, h = bbox
-        y_pred_crop = run_prediction(model, x, device)
-        y_pred_crop = cv.resize(y_pred_crop, (w, h), cv.INTER_LINEAR)
 
+        print(w, h)
+
+        plt.imshow(x.transpose(0, 2).numpy().astype(np.uint8))
+        plt.show()
+        y_pred_crop = run_prediction(model, x, device, dataset)
+        y_pred_crop = cv.resize(y_pred_crop, (w, h), cv.INTER_LINEAR)
         y_pred_crop[y_pred_crop < 0.5] = 0
         y_pred_crop[y_pred_crop >= 0.5] = 1
         y_pred[t:t+h, l:l+w] = np.logical_or(y_pred[t:t+h, l:l+w], y_pred_crop)
+
+        plt.imshow(y[t:t+h, l:l+w])
+        plt.show()
+        plt.imshow(y_pred_crop)
+        plt.show()
     else:
       x, _ = dataset[i]
-      y_pred = run_prediction(model, x, device)
-      y_pred = cv.resize(y_pred, y.shape[-2:], cv.INTER_LINEAR)
+      y_pred = run_prediction(model, x, device, dataset)
+      y_pred = cv.resize(y_pred, y.shape[-2:][::-1], cv.INTER_LINEAR)
     
     all_ys.append(y)
     all_predicted_ys.append(y_pred)
@@ -100,26 +114,23 @@ def main(args):
   precisions = np.array([precision(all_predicted_ys[i], all_ys[i]) for i in range(len(all_ys))])
   recalls = np.array([recall(all_predicted_ys[i], all_ys[i]) for i in range(len(all_ys))])
 
-  plt.hist(dscs, bins=100)
-  plt.ylabel('DSC')
-  plt.xlabel('f')
-  plt.show()
+  # plt.hist(dscs, bins=100)
+  # plt.ylabel('DSC')
+  # plt.xlabel('f')
+  # plt.show()
 
   print(f'DSC: {dscs.mean():.4f} | IoU: {ious.mean():.4f} | prec: {precisions.mean():.4f} | rec: {recalls.mean():.4f}')
   
   sorting = np.argsort(dscs)
   for idx in sorting:
-    print(bboxes[idx])
+    #print(bboxes[idx])
     plt.imshow(all_ys[idx])
     plt.show()
-    l, t, w, h = bboxes[idx][0]
-    viz_img = cv.rectangle(all_xs[idx], (l, t), (l + w, t + h), round(all_xs[idx].max()), 5)
-    plt.imshow(viz_img)
-    plt.show()
-    thresh = all_predicted_y1[idx]
-    plt.imshow(thresh > 0.05)
-    plt.show()
-    plt.imshow(all_predicted_y2[idx])
+    # l, t, w, h = bboxes[idx][0]
+    # viz_img = cv.rectangle(all_xs[idx], (l, t), (l + w, t + h), round(all_xs[idx].max()), 5)
+    # plt.imshow(viz_img)
+    # plt.show()
+    plt.imshow(all_predicted_ys[idx])
     plt.show()
   
   return dscs.mean(), ious.mean(), precisions.mean(), recalls.mean()
@@ -141,7 +152,12 @@ if __name__ == '__main__':
       '--cropped', 
       action='store_true',
       help='use crops')
-
+  parser.add_argument(
+      '--input-size',
+      type=int,
+      default=256,
+      help='size of input image, in pixels',
+  )
   args = parser.parse_args()
   main(args)
 

@@ -48,6 +48,12 @@ class AortaDataset(CropDataset):
     all_files.sort()
     all_files = [f for f in all_files if hospital_id in f]
     self.file_names = all_files
+
+    transforms = [] if self.cropped else [A.CenterCrop(512, 512)]
+    if folder == 'train':
+      transforms.append(CropDataset.get_augmentation())
+    self.transform = A.Compose(transforms, bbox_params=A.BboxParams(format='coco', label_fields=['labels']))
+
     
   def __len__(self):
     # return 16 # overfit single batch

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
@@ -49,7 +50,6 @@ class UNet(nn.Module):
     )
 
   def forward(self, x, additional_skips=[torch.Tensor([]).cuda()] * 4):
-
     if self.input_size is not None:
       original_size = x.shape[-1]
       x = F.interpolate(x, self.input_size)

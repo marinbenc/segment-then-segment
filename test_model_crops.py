@@ -7,14 +7,16 @@ import numpy as np
 import torch
 import cv2 as cv
 from skimage.filters import threshold_otsu
+import torch.nn.functional as F
 
 import train
 from helpers import dsc, iou, precision, recall
 
-def run_prediction(model, x, device):
+def run_prediction(model, x, device, dataset):
   x = x.to(device)
-  prediction = model(x.unsqueeze(0).detach())
-  prediction = prediction.squeeze().detach().cpu()
+  x = F.interpolate(x.unsqueeze(0), dataset.input_size)
+  prediction = model(x)
+  prediction = prediction.squeeze(0).squeeze(0).detach().cpu().numpy()
   return prediction
 
 def get_predictions(model, dataset, device):
@@ -26,7 +28,7 @@ def get_predictions(model, dataset, device):
     y = y.squeeze().detach().cpu().numpy()
 
     x, _ = dataset[i]
-    y_pred = run_prediction(model, x, device)
+    y_pred = run_prediction(model, x, device, dataset)
     
     all_ys.append(y)
     all_predicted_ys.append(y_pred)
@@ -47,19 +49,29 @@ def get_predictions_cropped(model, dataset, proposed_ys, device):
 
 
 def run_prediction_cropped(x, y_proposal, y, model, dataset, device):
-  y_proposal = cv.resize(y_proposal.numpy(), y.shape[-2:], cv.INTER_LINEAR)
+  y_proposal = cv.resize(y_proposal, y.shape[-2:][::-1], cv.INTER_LINEAR)
+  y_proposal[y_proposal >= 0.5] = 1
+  y_proposal[y_proposal < 0.5] = 0
   crops = dataset.get_crops_for_proposal(x, x, y_proposal)
   y_pred = np.zeros_like(y)
-
+  
   for (x_crop, _, bbox) in crops:
     l, t, w, h = bbox
+    if l + w > y.shape[-1] or t + h > y.shape[-2]:
+      print(l, t, l + w, t + h, y.shape)
+      continue
 
-    y_pred_crop = run_prediction(model, x_crop, device).squeeze().numpy()
+    y_pred_crop = run_prediction(model, x_crop, device, dataset)
     y_pred_crop = cv.resize(y_pred_crop, (w, h), cv.INTER_LINEAR)
-
     y_pred_crop[y_pred_crop < 0.5] = 0
     y_pred_crop[y_pred_crop >= 0.5] = 1
     y_pred[t:t+h, l:l+w] = np.logical_or(y_pred[t:t+h, l:l+w], y_pred_crop)
+
+    # plt.imshow(y[t:t+h, l:l+w])
+    # plt.show()
+    # plt.imshow(y_pred_crop)
+    # plt.show()
+
   
   return y_pred
 
@@ -78,7 +90,7 @@ def main(args):
   device = torch.device('cpu' if not torch.cuda.is_available() else 'cuda')
   
   dataset_class = train.get_dataset_class(args)
-  dataset = dataset_class('valid', cropped=False)
+  dataset = dataset_class('valid', cropped=False, input_size=args.input_size)
   model = get_model(args.weights, args, dataset_class, device)
   cropped_model = get_model(args.weights_cropped, args, dataset_class, device)
 
@@ -99,6 +111,7 @@ def main(args):
   
   sorting = np.argsort(dscs)[::-1]
   for idx in sorting:
+    print(all_ys[idx].shape)
     plt.imshow(all_ys[idx])
     plt.show()
     plt.imshow(all_predicted_ys_cropped[idx])
@@ -126,7 +139,12 @@ if __name__ == '__main__':
       '--cropped', 
       action='store_true',
       help='use crops')
-
+  parser.add_argument(
+      '--input-size',
+      type=int,
+      default=256,
+      help='size of input image, in pixels',
+  )
   args = parser.parse_args()
   main(args)
 

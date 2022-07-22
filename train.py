@@ -27,8 +27,10 @@ from unet_plain import UNet
 
 sys.path.append('data/aorta')
 from aa_dataset import AortaDataset
+sys.path.append('data/hist')
+from hist_dataset import HistDataset
 
-dataset_choices = ['aa']
+dataset_choices = ['aa', 'cells']
 model_choices = ['unet', 'sampler']
 loss_choices = ['dsc', 'bce']
 
@@ -127,6 +129,7 @@ def main(args):
 def get_dataset_class(args):
     mapping = {
       'aa':    AortaDataset,
+      'cells': HistDataset,
     }
     return mapping[args.dataset]
 
@@ -134,7 +137,7 @@ def get_model(args, dataset_class, device):
     if args.model == 'sampler':
         model = DoubleUnetSampler()
     if args.model == 'unet':
-        model = UNet('cuda', in_channels=1, out_channels=1, sigmoid_activation=True, input_size=128)
+        model = UNet('cuda', in_channels=dataset_class.in_channels, out_channels=dataset_class.out_channels, sigmoid_activation=True, input_size=None)
     return model
 
 def data_loaders(args, dataset_class):
@@ -164,11 +167,13 @@ def data_loaders(args, dataset_class):
 def datasets(args, dataset_class):
     train = dataset_class(
       folder='train',
-      cropped=args.cropped
+      cropped=args.cropped,
+      input_size=args.input_size
     )
     valid = dataset_class(
       folder='valid',
-      cropped=args.cropped
+      cropped=args.cropped,
+      input_size=args.input_size
     )
     return train, valid
 
@@ -224,6 +229,12 @@ if __name__ == '__main__':
         '--cropped', 
         action='store_true',
         help='train on cropped images')
+    parser.add_argument(
+        '--input-size',
+        type=int,
+        default=256,
+        help='size of input image, in pixels',
+    )
     parser.add_argument(
         '--percent',
         type=float,
