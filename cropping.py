@@ -68,8 +68,8 @@ class CropDataset(Dataset):
     self.cropped = cropped
     self.cropped = cropped
     self.input_size = input_size
-    self.padding = input_size // 4
-    self.bbox_augmentation_size = self.padding if folder == 'train' else 0
+    self.padding = input_size // 8
+    self.bbox_augmentation_size = 16 if folder == 'train' else 0
     np.random.seed(42)
 
   def get_file_data(self, idx):

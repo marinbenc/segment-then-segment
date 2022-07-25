@@ -6,34 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import cv2 as cv
-from skimage.filters import threshold_otsu
-import torch.nn.functional as F
-
 import train
-from helpers import dsc, iou, precision, recall
 
-def run_prediction(model, x, device, dataset):
-  x = x.to(device)
-  x = F.interpolate(x.unsqueeze(0), dataset.input_size)
-  prediction = model(x)
-  prediction = prediction.squeeze(0).squeeze(0).detach().cpu().numpy()
-  return prediction
-
-def get_predictions(model, dataset, device):
-  all_ys = []
-  all_predicted_ys = []
-
-  for i in range(len(dataset)):
-    _, y, _ = dataset.get_file_data(i)
-    y = y.squeeze().detach().cpu().numpy()
-
-    x, _ = dataset[i]
-    y_pred = run_prediction(model, x, device, dataset)
-    
-    all_ys.append(y)
-    all_predicted_ys.append(y_pred)
-
-  return all_ys, all_predicted_ys
+from test_utils import get_predictions, run_prediction, get_model, calculate_metrics, print_metrics
 
 def get_predictions_cropped(model, dataset, proposed_ys, device):
   all_predicted_ys = []
@@ -46,7 +21,6 @@ def get_predictions_cropped(model, dataset, proposed_ys, device):
     all_predicted_ys.append(y_pred)
 
   return all_predicted_ys
-
 
 def run_prediction_cropped(x, y_proposal, y, model, dataset, device):
   y_proposal = cv.resize(y_proposal, y.shape[-2:][::-1], cv.INTER_LINEAR)
@@ -72,19 +46,7 @@ def run_prediction_cropped(x, y_proposal, y, model, dataset, device):
     # plt.imshow(y_pred_crop)
     # plt.show()
 
-  
   return y_pred
-
-def get_model(weights, args, dataset_class, device):
-  model = train.get_model(args, dataset_class, device)
-  model.to(device)
-  model.load_state_dict(torch.load(weights))
-  model.eval()
-  model.train(False)
-  return model
-
-def lerp(a, b, c):
-  return c * a + (1 - c) * b
 
 def main(args):
   device = torch.device('cpu' if not torch.cuda.is_available() else 'cuda')
@@ -97,17 +59,14 @@ def main(args):
   all_ys, all_predicted_ys = get_predictions(model, dataset, device)
   all_predicted_ys_cropped = get_predictions_cropped(cropped_model, dataset, all_predicted_ys, device)
 
-  dscs = np.array([dsc(all_predicted_ys_cropped[i], all_ys[i]) for i in range(len(all_ys))])
-  ious = np.array([iou(all_predicted_ys_cropped[i], all_ys[i]) for i in range(len(all_ys))])
-  precisions = np.array([precision(all_predicted_ys_cropped[i], all_ys[i]) for i in range(len(all_ys))])
-  recalls = np.array([recall(all_predicted_ys_cropped[i], all_ys[i]) for i in range(len(all_ys))])
-
+  metrics = calculate_metrics(all_predicted_ys_cropped, all_ys)
+  dscs = metrics[0]
   # plt.hist(dscs, bins=100)
   # plt.ylabel('DSC')
   # plt.xlabel('f')
   # plt.show()
 
-  print(f'DSC: {dscs.mean():.4f} | IoU: {ious.mean():.4f} | prec: {precisions.mean():.4f} | rec: {recalls.mean():.4f}')
+  print_metrics(metrics)
   
   sorting = np.argsort(dscs)[::-1]
   for idx in sorting:
