@@ -29,17 +29,21 @@ def expand_bbox(bbox, size, padding=32):
   t -= padding
 
   # make sure the bbox is witihin image bounds
-  if l + w > size[1]:
-    l -= (l + w) - (size[1])
-  if h + t > size[0]:
-    t -= (h + t) - (size[0])
-  
+  img_h, img_w = size[0], size[1]
+
   l = max(0, l)
   t = max(0, t)
+
+  if l + w > img_w:
+    l -= l + w - img_w
+  if t + h > img_h:
+    t -= t + h - img_h
   
   return l, t, w, h
 
 def get_bboxes(img, padding, augmentation_size=0):
+  img[img > 0.5] = 1
+  img[img <= 0.5] = 0
   count, label = cv.connectedComponents((img * 255).astype(np.uint8))
   
   # [(left, top, width, height)]
@@ -47,9 +51,12 @@ def get_bboxes(img, padding, augmentation_size=0):
   for i in range(1, count):
     bbox = cv.boundingRect(np.uint8(label == i))
     bbox_augmentation = np.random.randint(-augmentation_size, augmentation_size + 1, size=4)
+
     bbox = np.array(bbox) + bbox_augmentation
     bbox = expand_bbox(bbox, img.shape[-2:], padding)
-    bboxes.append(bbox)
+
+    if not (bbox[0] < 0 or bbox[1] < 0 or bbox[2] < 5 or bbox[3] < 5):
+      bboxes.append(bbox)
   return bboxes
 
 class CropDataset(Dataset):

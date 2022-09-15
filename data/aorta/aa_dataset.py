@@ -70,6 +70,8 @@ class AortaDataset(CropDataset):
     scan[scan < WINDOW_MIN] = WINDOW_MIN
 
     scan = scan.astype(np.float64)
+
+    print(scan.shape)
     
     # normalize and zero-center
     scan = (scan - WINDOW_MIN) / (WINDOW_MAX - WINDOW_MIN)

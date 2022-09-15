@@ -8,7 +8,7 @@ import torch
 import cv2 as cv
 import train
 
-from test_utils import get_predictions, run_prediction, get_model, calculate_metrics, print_metrics
+from test_utils import get_predictions, run_prediction, get_model, calculate_metrics, print_metrics, small_objects_img
 
 def main(args):
   device = torch.device('cpu' if not torch.cuda.is_available() else 'cuda')
@@ -36,10 +36,10 @@ def main(args):
         y_pred_crop[y_pred_crop >= 0.5] = 1
         y_pred[t:t+h, l:l+w] = np.logical_or(y_pred[t:t+h, l:l+w], y_pred_crop)
 
-        plt.imshow(y[t:t+h, l:l+w])
-        plt.show()
-        plt.imshow(y_pred_crop)
-        plt.show()
+        # plt.imshow(y[t:t+h, l:l+w])
+        # plt.show()
+        # plt.imshow(y_pred_crop)
+        # plt.show()
     else:
       x, _ = dataset[i]
       y_pred = run_prediction(model, x, device, dataset)

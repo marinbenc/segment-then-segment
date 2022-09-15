@@ -18,6 +18,9 @@ def dsc(y_pred, y_true):
   y_pred = _thresh(y_pred)
   y_true = _thresh(y_true)
 
+  if not np.any(y_true):
+    return 0 if np.any(y_pred) else 1
+
   score = dc(y_pred, y_true)
   return score
 

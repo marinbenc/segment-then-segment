@@ -37,7 +37,7 @@ class PolypDataset(CropDataset):
     folder: one of 'train', 'valid', 'test'
     '''
     super().__init__(folder, cropped, input_size)
-    self.directory = p.join('data', 'hist', folder)
+    self.directory = p.join('data', 'polyp', folder)
 
     all_files = h.listdir(p.join(self.directory, 'label'))
     all_files = np.array(all_files)

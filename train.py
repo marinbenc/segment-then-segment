@@ -29,12 +29,16 @@ sys.path.append('data/aorta')
 from aa_dataset import AortaDataset
 sys.path.append('data/hist')
 from hist_dataset import HistDataset
+sys.path.append('data/polyp')
+from polyp_dataset import PolypDataset
 
-dataset_choices = ['aa', 'cells']
+dataset_choices = ['aa', 'cells', 'polyp']
 model_choices = ['unet', 'sampler']
 loss_choices = ['dsc', 'bce']
 
 def main(args):
+    log_dir = f'logs/{args.experiment_name }'
+    args.logs = log_dir
     makedirs(args)
     snapshotargs(args)
     device = torch.device('cpu' if not torch.cuda.is_available() else 'cuda')
@@ -67,17 +71,17 @@ def main(args):
 
     best_dsc = 0
 
-    @trainer.on(Events.GET_BATCH_COMPLETED(once=1))
-    def plot_batch(engine):
-        x, y = engine.state.batch
-        images = [x[0], y[0]]
-        for image in images:
-            if image.shape[0] > 1:
-                image = image.numpy()
-                image = image.transpose(1, 2, 0)
-                image += 0.5
-            plt.imshow(image.squeeze())
-            plt.show()
+    # @trainer.on(Events.GET_BATCH_COMPLETED(once=1))
+    # def plot_batch(engine):
+    #     x, y = engine.state.batch
+    #     images = [x[0], y[0]]
+    #     for image in images:
+    #         if image.shape[0] > 1:
+    #             image = image.numpy()
+    #             image = image.transpose(1, 2, 0)
+    #             image += 0.5
+    #         plt.imshow(image.squeeze())
+    #         plt.show()
 
     @trainer.on(Events.EPOCH_COMPLETED)
     def compute_metrics(engine):
@@ -88,7 +92,6 @@ def main(args):
         if curr_dsc > best_dsc:
             best_dsc = curr_dsc
 
-    log_dir = f'logs/{datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")}'
     tb_logger = TensorboardLogger(log_dir=log_dir)
 
     tb_logger.attach_output_handler(
@@ -130,6 +133,7 @@ def get_dataset_class(args):
     mapping = {
       'aa':    AortaDataset,
       'cells': HistDataset,
+      'polyp': PolypDataset,
     }
     return mapping[args.dataset]
 
@@ -208,9 +212,6 @@ if __name__ == '__main__':
         help='initial learning rate (default: 0.001)',
     )
     parser.add_argument(
-        '--logs', type=str, default='./logs', help='folder to save logs'
-    )
-    parser.add_argument(
         '--model', type=str, choices=model_choices, default='unet', help='which model architecture to use'
     )
     parser.add_argument(
@@ -240,6 +241,12 @@ if __name__ == '__main__':
         type=float,
         default=None,
         help='percent of the training dataset to use',
+    )
+    parser.add_argument(
+        '--experiment-name', type=str, default=datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+    )
+    parser.add_argument(
+        '--logs', type=str, default='./logs', help='folder to save logs'
     )
     args = parser.parse_args()
     main(args)
