@@ -26,6 +26,8 @@ GLOBAL_PIXEL_MEAN = 0.1
 
 class AortaDataset(CropDataset):
 
+  in_channels = 1
+
   @staticmethod
   def get_patient_names(hospital_id):
     all_files = h.listdir('data/label')
@@ -70,8 +72,6 @@ class AortaDataset(CropDataset):
     scan[scan < WINDOW_MIN] = WINDOW_MIN
 
     scan = scan.astype(np.float64)
-
-    print(scan.shape)
     
     # normalize and zero-center
     scan = (scan - WINDOW_MIN) / (WINDOW_MAX - WINDOW_MIN)

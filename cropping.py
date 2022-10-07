@@ -61,7 +61,7 @@ def get_bboxes(img, padding, augmentation_size=0):
 
 class CropDataset(Dataset):
   in_channels = 3
-  out_channels = 3
+  out_channels = 1
 
   @staticmethod
   def get_augmentation():
@@ -77,7 +77,7 @@ class CropDataset(Dataset):
     self.input_size = input_size
     self.padding = input_size // 8
     self.bbox_augmentation_size = 16 if folder == 'train' else 0
-    np.random.seed(42)
+    np.random.seed(2022)
 
   def get_file_data(self, idx):
     scan, mask = self.get_img_mask(idx)

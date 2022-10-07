@@ -148,7 +148,7 @@ def data_loaders(args, dataset_class):
     dataset_train, dataset_valid = datasets(args, dataset_class)
 
     def worker_init(worker_id):
-        np.random.seed(42 + worker_id)
+        np.random.seed(2022 + worker_id)
 
     loader_train = DataLoader(
         dataset_train,

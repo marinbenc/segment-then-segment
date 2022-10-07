@@ -1,0 +1,115 @@
+cells
+ -------------
+ UNCROPPED:
+ -------------
+logs/cells_uncropped_32
+DSC: 0.376 \pm 0.259 | IoU: 0.267  \pm 0.221 | prec: 0.8391 \pm 0.130 | rec: 0.2942  \pm 0.262
+logs/cells_uncropped_48
+DSC: 0.245 \pm 0.285 | IoU: 0.177  \pm 0.234 | prec: 0.7974 \pm 0.257 | rec: 0.1904  \pm 0.259
+logs/cells_uncropped_64
+DSC: 0.237 \pm 0.242 | IoU: 0.160  \pm 0.191 | prec: 0.8487 \pm 0.138 | rec: 0.1715  \pm 0.215
+logs/cells_uncropped_96
+DSC: 0.557 \pm 0.281 | IoU: 0.437  \pm 0.269 | prec: 0.9048 \pm 0.135 | rec: 0.4696  \pm 0.298
+logs/cells_uncropped_128
+DSC: 0.685 \pm 0.294 | IoU: 0.587  \pm 0.300 | prec: 0.9166 \pm 0.082 | rec: 0.6298  \pm 0.325
+logs/cells_uncropped_192
+DSC: 0.823 \pm 0.139 | IoU: 0.720  \pm 0.179 | prec: 0.9190 \pm 0.065 | rec: 0.7802  \pm 0.204
+logs/cells_uncropped_256
+DSC: 0.848 \pm 0.114 | IoU: 0.751  \pm 0.154 | prec: 0.9152 \pm 0.069 | rec: 0.8170  \pm 0.177
+ -------------
+ CROPPED:
+ -------------
+logs/cells_cropped_32
+DSC: 0.627 \pm 0.248 | IoU: 0.502  \pm 0.253 | prec: 0.7460 \pm 0.274 | rec: 0.6882  \pm 0.292
+logs/cells_cropped_48
+DSC: 0.646 \pm 0.286 | IoU: 0.535  \pm 0.278 | prec: 0.7065 \pm 0.292 | rec: 0.7221  \pm 0.317
+logs/cells_cropped_64
+DSC: 0.742 \pm 0.259 | IoU: 0.646  \pm 0.273 | prec: 0.8736 \pm 0.122 | rec: 0.7390  \pm 0.307
+logs/cells_cropped_96
+DSC: 0.835 \pm 0.151 | IoU: 0.740  \pm 0.183 | prec: 0.9052 \pm 0.081 | rec: 0.8183  \pm 0.211
+logs/cells_cropped_128
+DSC: 0.868 \pm 0.094 | IoU: 0.778  \pm 0.129 | prec: 0.8886 \pm 0.093 | rec: 0.8753  \pm 0.148
+logs/cells_cropped_192
+DSC: 0.898 \pm 0.066 | IoU: 0.821  \pm 0.106 | prec: 0.8868 \pm 0.093 | rec: 0.9215  \pm 0.089
+polyp
+ -------------
+ UNCROPPED:
+ -------------
+logs/polyp_uncropped_32
+DSC: 0.039 \pm 0.022 | IoU: 0.020  \pm 0.012 | prec: 0.2205 \pm 0.188 | rec: 0.0237  \pm 0.016
+logs/polyp_uncropped_48
+DSC: 0.129 \pm 0.084 | IoU: 0.071  \pm 0.050 | prec: 0.1342 \pm 0.122 | rec: 0.1843  \pm 0.113
+logs/polyp_uncropped_64
+DSC: 0.060 \pm 0.048 | IoU: 0.031  \pm 0.027 | prec: 0.2494 \pm 0.208 | rec: 0.0392  \pm 0.036
+logs/polyp_uncropped_96
+DSC: 0.115 \pm 0.115 | IoU: 0.066  \pm 0.074 | prec: 0.3578 \pm 0.231 | rec: 0.0890  \pm 0.134
+logs/polyp_uncropped_128
+DSC: 0.362 \pm 0.207 | IoU: 0.243  \pm 0.172 | prec: 0.4324 \pm 0.248 | rec: 0.4402  \pm 0.299
+logs/polyp_uncropped_192
+DSC: 0.522 \pm 0.213 | IoU: 0.382  \pm 0.204 | prec: 0.4943 \pm 0.250 | rec: 0.7125  \pm 0.254
+logs/polyp_uncropped_256
+DSC: 0.651 \pm 0.211 | IoU: 0.518  \pm 0.230 | prec: 0.6426 \pm 0.274 | rec: 0.7743  \pm 0.199
+ -------------
+ CROPPED:
+ -------------
+logs/polyp_cropped_32
+DSC: 0.073 \pm 0.060 | IoU: 0.039  \pm 0.034 | prec: 0.2239 \pm 0.182 | rec: 0.0513  \pm 0.047
+logs/polyp_cropped_48
+DSC: 0.323 \pm 0.171 | IoU: 0.205  \pm 0.129 | prec: 0.2650 \pm 0.180 | rec: 0.6129  \pm 0.220
+logs/polyp_cropped_64
+DSC: 0.309 \pm 0.169 | IoU: 0.196  \pm 0.127 | prec: 0.2110 \pm 0.142 | rec: 0.7986  \pm 0.112
+logs/polyp_cropped_96
+DSC: 0.273 \pm 0.148 | IoU: 0.167  \pm 0.105 | prec: 0.3001 \pm 0.190 | rec: 0.3504  \pm 0.186
+logs/polyp_cropped_128
+DSC: 0.337 \pm 0.174 | IoU: 0.217  \pm 0.135 | prec: 0.2313 \pm 0.152 | rec: 0.8759  \pm 0.141
+logs/polyp_cropped_192
+DSC: 0.381 \pm 0.204 | IoU: 0.256  \pm 0.166 | prec: 0.2890 \pm 0.191 | rec: 0.7721  \pm 0.268
+aa
+ -------------
+ UNCROPPED:
+ -------------
+logs/aa_uncropped_32
+DSC: 0.440 \pm 0.296 | IoU: 0.331  \pm 0.260 | prec: 0.4045 \pm 0.309 | rec: 0.5546  \pm 0.292
+logs/aa_uncropped_48
+DSC: 0.120 \pm 0.094 | IoU: 0.066  \pm 0.054 | prec: 0.3997 \pm 0.304 | rec: 0.0767  \pm 0.061
+logs/aa_uncropped_64
+DSC: 0.103 \pm 0.185 | IoU: 0.067  \pm 0.126 | prec: 0.2829 \pm 0.412 | rec: 0.0689  \pm 0.128
+logs/aa_uncropped_96
+DSC: 0.088 \pm 0.188 | IoU: 0.059  \pm 0.139 | prec: 0.1956 \pm 0.333 | rec: 0.0680  \pm 0.163
+logs/aa_uncropped_128
+DSC: 0.144 \pm 0.251 | IoU: 0.105  \pm 0.205 | prec: 0.2698 \pm 0.347 | rec: 0.1212  \pm 0.238
+logs/aa_uncropped_192
+DSC: 0.582 \pm 0.330 | IoU: 0.486  \pm 0.332 | prec: 0.7604 \pm 0.304 | rec: 0.5417  \pm 0.358
+logs/aa_uncropped_256
+DSC: 0.732 \pm 0.295 | IoU: 0.650  \pm 0.318 | prec: 0.8986 \pm 0.225 | rec: 0.6875  \pm 0.321
+logs/aa_uncropped_320
+DSC: 0.804 \pm 0.243 | IoU: 0.725  \pm 0.267 | prec: 0.9248 \pm 0.198 | rec: 0.7535  \pm 0.263
+logs/aa_uncropped_384
+DSC: 0.883 \pm 0.181 | IoU: 0.824  \pm 0.210 | prec: 0.9466 \pm 0.160 | rec: 0.8485  \pm 0.194
+logs/aa_uncropped_448
+DSC: 0.910 \pm 0.132 | IoU: 0.853  \pm 0.160 | prec: 0.9527 \pm 0.141 | rec: 0.8827  \pm 0.124
+logs/aa_uncropped_512
+DSC: 0.888 \pm 0.158 | IoU: 0.825  \pm 0.187 | prec: 0.9576 \pm 0.136 | rec: 0.8463  \pm 0.177
+ -------------
+ CROPPED:
+ -------------
+logs/aa_cropped_32
+DSC: 0.241 \pm 0.089 | IoU: 0.140  \pm 0.058 | prec: 0.1866 \pm 0.113 | rec: 0.5871  \pm 0.226
+logs/aa_cropped_48
+DSC: 0.423 \pm 0.228 | IoU: 0.297  \pm 0.199 | prec: 0.3048 \pm 0.205 | rec: 0.9180  \pm 0.081
+logs/aa_cropped_64
+DSC: 0.262 \pm 0.255 | IoU: 0.178  \pm 0.190 | prec: 0.2576 \pm 0.292 | rec: 0.3753  \pm 0.323
+logs/aa_cropped_96
+DSC: 0.274 \pm 0.270 | IoU: 0.191  \pm 0.212 | prec: 0.3132 \pm 0.304 | rec: 0.3513  \pm 0.356
+logs/aa_cropped_128
+DSC: 0.514 \pm 0.303 | IoU: 0.402  \pm 0.280 | prec: 0.5256 \pm 0.316 | rec: 0.6089  \pm 0.363
+logs/aa_cropped_192
+DSC: 0.656 \pm 0.254 | IoU: 0.536  \pm 0.258 | prec: 0.5757 \pm 0.274 | rec: 0.8483  \pm 0.227
+logs/aa_cropped_256
+DSC: 0.784 \pm 0.203 | IoU: 0.683  \pm 0.237 | prec: 0.8063 \pm 0.231 | rec: 0.8136  \pm 0.202
+logs/aa_cropped_320
+DSC: 0.858 \pm 0.186 | IoU: 0.786  \pm 0.214 | prec: 0.8614 \pm 0.212 | rec: 0.8811  \pm 0.156
+logs/aa_cropped_384
+DSC: 0.878 \pm 0.156 | IoU: 0.807  \pm 0.186 | prec: 0.9066 \pm 0.176 | rec: 0.8695  \pm 0.143
+logs/aa_cropped_448
+DSC: 0.902 \pm 0.132 | IoU: 0.840  \pm 0.165 | prec: 0.9240 \pm 0.150 | rec: 0.8943  \pm 0.127

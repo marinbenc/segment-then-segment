@@ -49,7 +49,7 @@ class UNet(nn.Module):
       in_channels=features, out_channels=out_channels, kernel_size=1
     )
 
-  def forward(self, x, additional_skips=[torch.Tensor([]).cuda()] * 4):
+  def forward(self, x, output_size=None, additional_skips=[torch.Tensor([]).cuda()] * 4):
     if self.input_size is not None:
       original_size = x.shape[-1]
       x = F.interpolate(x, self.input_size)
@@ -83,6 +83,9 @@ class UNet(nn.Module):
 
     if self.input_size is not None:
       y = F.interpolate(y, original_size)
+
+    if output_size is not None:
+      y = F.interpolate(y, output_size)
 
     return y
 

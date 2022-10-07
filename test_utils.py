@@ -53,23 +53,18 @@ def calculate_metrics(predicted_ys, gt_ys):
       small_ys.append(small_ys_all[i])
       small_predicted_ys.append(small_predicted_ys_all[i])
 
-  print(len(small_ys))
-
   metrics_small = _segmentation_metrics(small_predicted_ys, small_ys)
 
   return metrics_all, metrics_small
 
 def print_metrics(metrics):
   dscs, ious, bious, precisions, recalls = metrics[0]
-  print(f'DSC: {dscs.mean():.4f} | IoU: {ious.mean():.4f} | bIoU: {bious.mean():.4f} | prec: {precisions.mean():.4f} | rec: {recalls.mean():.4f}')
-  print('small:')
-  dscs, ious, bious, precisions, recalls = metrics[1]
-  print(f'DSC: {dscs.mean():.4f} | IoU: {ious.mean():.4f} | bIoU: {bious.mean():.4f} | prec: {precisions.mean():.4f} | rec: {recalls.mean():.4f}')
+  print(f'DSC: {dscs.mean():.3f} \\pm {dscs.std():.3f} | IoU: {ious.mean():.3f}  \\pm {ious.std():.3f} | prec: {precisions.mean():.4f} \\pm {precisions.std():.3f} | rec: {recalls.mean():.4f}  \\pm {recalls.std():.3f}')
 
-def run_prediction(model, x, device, dataset):
+def run_prediction(model, x, device, dataset, original_size):
   x = x.to(device)
   x = F.interpolate(x.unsqueeze(0), dataset.input_size)
-  prediction = model(x)
+  prediction = model(x, output_size=original_size)
   prediction = prediction.squeeze(0).squeeze(0).detach().cpu().numpy()
   return prediction
 
@@ -82,7 +77,7 @@ def get_predictions(model, dataset, device):
     y = y.squeeze().detach().cpu().numpy()
 
     x, _ = dataset[i]
-    y_pred = run_prediction(model, x, device, dataset)
+    y_pred = run_prediction(model, x, device, dataset, original_size=y.shape[-2:])
     
     all_ys.append(y)
     all_predicted_ys.append(y_pred)

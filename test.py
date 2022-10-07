@@ -30,8 +30,7 @@ def main(args):
       crops = dataset.get_crops(i)
       for (x, _, bbox) in crops:
         l, t, w, h = bbox
-        y_pred_crop = run_prediction(model, x, device, dataset)
-        y_pred_crop = cv.resize(y_pred_crop, (w, h), cv.INTER_LINEAR)
+        y_pred_crop = run_prediction(model, x, device, dataset, original_size=(w, h))
         y_pred_crop[y_pred_crop < 0.5] = 0
         y_pred_crop[y_pred_crop >= 0.5] = 1
         y_pred[t:t+h, l:l+w] = np.logical_or(y_pred[t:t+h, l:l+w], y_pred_crop)
@@ -43,7 +42,6 @@ def main(args):
     else:
       x, _ = dataset[i]
       y_pred = run_prediction(model, x, device, dataset)
-      y_pred = cv.resize(y_pred, y.shape[-2:][::-1], cv.INTER_LINEAR)
     
     all_ys.append(y)
     all_predicted_ys.append(y_pred)
@@ -57,19 +55,19 @@ def main(args):
   # plt.xlabel('f')
   # plt.show()
   
-  sorting = np.argsort(dscs)
-  for idx in sorting:
-    #print(bboxes[idx])
-    plt.imshow(all_ys[idx])
-    plt.show()
-    # l, t, w, h = bboxes[idx][0]
-    # viz_img = cv.rectangle(all_xs[idx], (l, t), (l + w, t + h), round(all_xs[idx].max()), 5)
-    # plt.imshow(viz_img)
-    # plt.show()
-    plt.imshow(all_predicted_ys[idx])
-    plt.show()
+  # sorting = np.argsort(dscs)
+  # for idx in sorting:
+  #   #print(bboxes[idx])
+  #   plt.imshow(all_ys[idx])
+  #   plt.show()
+  #   # l, t, w, h = bboxes[idx][0]
+  #   # viz_img = cv.rectangle(all_xs[idx], (l, t), (l + w, t + h), round(all_xs[idx].max()), 5)
+  #   # plt.imshow(viz_img)
+  #   # plt.show()
+  #   plt.imshow(all_predicted_ys[idx])
+  #   plt.show()
   
-  return dscs.mean(), ious.mean(), precisions.mean(), recalls.mean()
+  # return dscs.mean(), ious.mean(), precisions.mean(), recalls.mean()
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(

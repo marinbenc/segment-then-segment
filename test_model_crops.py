@@ -1,6 +1,7 @@
 import argparse
 import sys
 import os.path as p
+from timeit import default_timer as timer
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,6 +13,7 @@ from test_utils import get_predictions, run_prediction, get_model, calculate_met
 
 def get_predictions_cropped(model, dataset, proposed_ys, device):
   all_predicted_ys = []
+  all_xs = []
 
   for i in range(len(dataset)):
     x, y, _ = dataset.get_file_data(i)
@@ -20,10 +22,16 @@ def get_predictions_cropped(model, dataset, proposed_ys, device):
     y_pred = run_prediction_cropped(x, proposed_ys[i], y, model, dataset, device)    
     all_predicted_ys.append(y_pred)
 
-  return all_predicted_ys
+    if x.shape[0] == 3:
+      x = x.detach().cpu().numpy()
+      x = np.moveaxis(x, 0, -1)
+    else:
+      x = x[0].detach().cpu().numpy()
+    all_xs.append(x)
+
+  return all_xs, all_predicted_ys
 
 def run_prediction_cropped(x, y_proposal, y, model, dataset, device):
-  y_proposal = cv.resize(y_proposal, y.shape[-2:][::-1], cv.INTER_LINEAR)
   y_proposal[y_proposal >= 0.5] = 1
   y_proposal[y_proposal < 0.5] = 0
   crops = dataset.get_crops_for_proposal(x, x, y_proposal)
@@ -35,8 +43,7 @@ def run_prediction_cropped(x, y_proposal, y, model, dataset, device):
       print(l, t, l + w, t + h, y.shape)
       continue
 
-    y_pred_crop = run_prediction(model, x_crop, device, dataset)
-    y_pred_crop = cv.resize(y_pred_crop, (w, h), cv.INTER_LINEAR)
+    y_pred_crop = run_prediction(model, x_crop, device, dataset, original_size=(w, h))
     y_pred_crop[y_pred_crop < 0.5] = 0
     y_pred_crop[y_pred_crop >= 0.5] = 1
     y_pred[t:t+h, l:l+w] = np.logical_or(y_pred[t:t+h, l:l+w], y_pred_crop)
@@ -56,27 +63,39 @@ def main(args):
   model = get_model(args.weights, args, dataset_class, device)
   cropped_model = get_model(args.weights_cropped, args, dataset_class, device)
 
+  time_start = timer()
   all_ys, all_predicted_ys = get_predictions(model, dataset, device)
-  all_predicted_ys_cropped = get_predictions_cropped(cropped_model, dataset, all_predicted_ys, device)
+  time_uncropped = timer()
+  all_xs, all_predicted_ys_cropped = get_predictions_cropped(cropped_model, dataset, all_predicted_ys, device)
+  time_cropped = timer()
 
-  metrics = calculate_metrics(all_predicted_ys_cropped, all_ys)
-  dscs = metrics[0]
+  print('time uncropped: ', (time_uncropped - time_start) / len(dataset))
+  print('time cropped: ', (time_cropped - time_start) / len(dataset))
+
+  metrics_uncropped = calculate_metrics(all_predicted_ys, all_ys)
+  metrics_cropped = calculate_metrics(all_predicted_ys_cropped, all_ys)
+  # dscs = metrics[0]
   # plt.hist(dscs, bins=100)
   # plt.ylabel('DSC')
   # plt.xlabel('f')
   # plt.show()
 
-  print_metrics(metrics)
+  print(" cropped:")
+  print_metrics(metrics_cropped)
+  print(" uncropped:")
+  print_metrics(metrics_uncropped)
   
-  sorting = np.argsort(dscs)[::-1]
-  for idx in sorting:
-    print(all_ys[idx].shape)
-    plt.imshow(all_ys[idx])
-    plt.show()
-    plt.imshow(all_predicted_ys_cropped[idx])
-    plt.show()
+  # sorting = np.argsort(dscs)[::-1]
+  # for idx in sorting:
+  #   print(all_ys[idx].shape)
+  #   plt.imshow(all_ys[idx])
+  #   plt.show()
+  #   plt.imshow(all_predicted_ys_cropped[idx])
+  #   plt.show()
   
-  return dscs.mean(), ious.mean(), precisions.mean(), recalls.mean()
+  # return dscs.mean(), ious.mean(), precisions.mean(), recalls.mean()
+  return all_xs, all_ys, all_predicted_ys, all_predicted_ys_cropped, metrics_uncropped, metrics_cropped
+  
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(

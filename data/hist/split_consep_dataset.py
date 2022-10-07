@@ -19,7 +19,7 @@ for f in folders:
 
 all_train_imgs = h.listdir(p.join(original_train, 'Images'))
 
-np.random.seed(42)
+np.random.seed(2022)
 np.random.shuffle(all_train_imgs)
 
 split_idx = int(len(all_train_imgs) * 0.9)

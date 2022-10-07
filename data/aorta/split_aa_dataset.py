@@ -13,7 +13,7 @@ import numpy as np
 import nrrd
 import cv2 as cv
 
-sys.path.append('..')
+sys.path.append('../../')
 import helpers as h
 
 def read_scan(file_path):
@@ -28,7 +28,7 @@ scans_directory = 'data/avt/'
 all_files = h.listdir(scans_directory)
 all_files.sort()
 label_files = [f for f in all_files if 'seg' in f]
-np.random.seed(42)
+np.random.seed(2022)
 np.random.shuffle(label_files)
 print(label_files)
 
@@ -66,9 +66,6 @@ for (folder, labels) in zip(folders, split_label_files):
       volume_save_path = p.join(folder, 'input', volume_name)
       mask_save_path = p.join(folder, 'label', mask_name)
       print(volume_name, volume_slice.dtype)
-
-      #volume_slice = cv.resize(volume_slice, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
-      #mask_slice = cv.resize(mask_slice, dsize=(256, 256), interpolation=cv.INTER_CUBIC)
 
       np.save(volume_save_path, volume_slice)
       np.save(mask_save_path, mask_slice)
