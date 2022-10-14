@@ -74,11 +74,6 @@ def main(args):
 
   metrics_uncropped = calculate_metrics(all_predicted_ys, all_ys)
   metrics_cropped = calculate_metrics(all_predicted_ys_cropped, all_ys)
-  # dscs = metrics[0]
-  # plt.hist(dscs, bins=100)
-  # plt.ylabel('DSC')
-  # plt.xlabel('f')
-  # plt.show()
 
   print(" cropped:")
   print_metrics(metrics_cropped)
@@ -93,7 +88,6 @@ def main(args):
   #   plt.imshow(all_predicted_ys_cropped[idx])
   #   plt.show()
   
-  # return dscs.mean(), ious.mean(), precisions.mean(), recalls.mean()
   return all_xs, all_ys, all_predicted_ys, all_predicted_ys_cropped, metrics_uncropped, metrics_cropped
   
 
@@ -102,26 +96,22 @@ if __name__ == '__main__':
     description='Testing'
   )
   parser.add_argument(
-    '--weights', type=str, help='path to weights'
+    '--weights', type=str, help='path to weights of the model trained on uncropped images'
   )
   parser.add_argument(
-    '--weights-cropped', type=str, help='path to weights'
+    '--weights-cropped', type=str, help='path to weights of the model trained on cropped images'
   )
   parser.add_argument(
-    '--model', type=str, choices=train.model_choices, default='liver', help='dataset type'
+    '--model', type=str, choices=train.model_choices, default='unet', help='used model architecture'
   )
   parser.add_argument(
-    '--dataset', type=str, choices=train.dataset_choices, default='liver', help='dataset type'
+    '--dataset', type=str, choices=train.dataset_choices, default='cells', help='dataset type'
   )
-  parser.add_argument(
-      '--cropped', 
-      action='store_true',
-      help='use crops')
   parser.add_argument(
       '--input-size',
       type=int,
       default=256,
-      help='size of input image, in pixels',
+      help='size of input images the models were trained on',
   )
   args = parser.parse_args()
   main(args)

@@ -1,0 +1,19 @@
+name: pytorch
+channels:
+  - soumith
+  - defaults
+dependencies:
+  - torchaudio
+  - python=3.8
+  - jupyterlab
+  - scikit-image
+  - pylint
+  - scikit-learn
+  - ignite
+  - rope
+  - cudatoolkit=11.3
+  - torchvision
+  - pytorch
+  - pyvista
+  - pythreejs
+prefix: /home/marinbenc/miniconda3/envs/pytorch

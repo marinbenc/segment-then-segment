@@ -17,8 +17,6 @@ from ignite.utils import setup_logger
 from ignite.handlers import ModelCheckpoint
 from ignite.contrib.handlers.tensorboard_logger import TensorboardLogger, global_step_from_engine
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
-from ignite.metrics import Accuracy, Loss, ConfusionMatrix, DiceCoefficient, MeanSquaredError
-from ignite.contrib.metrics.regression import MedianAbsolutePercentageError
 
 import helpers as h
 from loss import DiceLoss
@@ -33,8 +31,7 @@ sys.path.append('data/polyp')
 from polyp_dataset import PolypDataset
 
 dataset_choices = ['aa', 'cells', 'polyp']
-model_choices = ['unet', 'sampler']
-loss_choices = ['dsc', 'bce']
+model_choices = ['unet']
 
 def main(args):
     log_dir = f'logs/{args.experiment_name }'
@@ -51,10 +48,7 @@ def main(args):
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    if args.loss == 'dsc':
-        criterion = DiceLoss()
-    elif args.loss == 'bce':
-        pass # TODO
+    criterion = DiceLoss()
 
     metrics = {
       'dsc': DiceMetric(device=device),
@@ -138,8 +132,6 @@ def get_dataset_class(args):
     return mapping[args.dataset]
 
 def get_model(args, dataset_class, device):
-    if args.model == 'sampler':
-        model = DoubleUnetSampler()
     if args.model == 'unet':
         model = UNet('cuda', in_channels=dataset_class.in_channels, out_channels=dataset_class.out_channels, sigmoid_activation=True, input_size=None)
     return model
@@ -209,16 +201,13 @@ if __name__ == '__main__':
         '--lr',
         type=float,
         default=0.001,
-        help='initial learning rate (default: 0.001)',
+        help='learning rate (default: 0.001)',
     )
     parser.add_argument(
         '--model', type=str, choices=model_choices, default='unet', help='which model architecture to use'
     )
     parser.add_argument(
-        '--loss', type=str, choices=loss_choices, default='dsc', help='which loss to use'
-    )
-    parser.add_argument(
-        '--dataset', type=str, choices=dataset_choices, default='liver', help='which dataset to use'
+        '--dataset', type=str, choices=dataset_choices, default='cells', help='which dataset to use'
     )
     parser.add_argument(
         '--workers',
@@ -234,16 +223,10 @@ if __name__ == '__main__':
         '--input-size',
         type=int,
         default=256,
-        help='size of input image, in pixels',
+        help='size of input image for the model, in pixels',
     )
     parser.add_argument(
-        '--percent',
-        type=float,
-        default=None,
-        help='percent of the training dataset to use',
-    )
-    parser.add_argument(
-        '--experiment-name', type=str, default=datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        '--experiment-name', type=str, default=datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S"), help='name of folder where checkpoints are stored',
     )
     parser.add_argument(
         '--logs', type=str, default='./logs', help='folder to save logs'

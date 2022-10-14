@@ -74,23 +74,23 @@ if __name__ == '__main__':
     description='Testing'
   )
   parser.add_argument(
-    '--weights', type=str, help='path to weights'
+    '--weights', type=str, help='path to trained model weights'
   )
   parser.add_argument(
-    '--model', type=str, choices=train.model_choices, default='liver', help='dataset type'
+    '--model', type=str, choices=train.model_choices, default='unet', help='model architecture'
   )
   parser.add_argument(
-    '--dataset', type=str, choices=train.dataset_choices, default='liver', help='dataset type'
+    '--dataset', type=str, choices=train.dataset_choices, default='cells', help='dataset type'
   )
   parser.add_argument(
       '--cropped', 
       action='store_true',
-      help='use crops')
+      help='test on cropped images')
   parser.add_argument(
       '--input-size',
       type=int,
       default=256,
-      help='size of input image, in pixels',
+      help='size of input image the model was trained on, in pixels',
   )
   args = parser.parse_args()
   main(args)
