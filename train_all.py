@@ -2,12 +2,12 @@ import train
 from types import SimpleNamespace
 import os.path as p
 
-def make_args(name, dataset, batch_size, lr, epochs, input_size, cropped):
+def make_args(name, model, dataset, batch_size, lr, epochs, input_size, cropped):
   args = {
     'batch_size': batch_size,
     'epochs': epochs,
     'lr': lr,
-    'model': 'unet',
+    'model': model,
     'loss': 'dsc',
     'dataset': dataset,
     'workers': 0,
@@ -43,39 +43,49 @@ aorta_base_params = {
 }
 
 params = [cells_base_params, polyp_base_params, aorta_base_params]
-all_input_sizes = [32, 48, 64, 96, 128, 192, 256, 320, 384, 448, 512]
+all_input_sizes = {
+  'unet': [32, 48, 64, 96, 128, 192, 256, 320, 384, 448, 512],
+  'resunetpp': [32, 64, 128, 256, 384],
+  'deeplab': [32, 64, 128, 256, 384],
+}
 
-for base_params in params:
-  input_sizes = [size for size in all_input_sizes if size <= base_params['max_size']]
-  del base_params['max_size']
 
-  print(base_params['dataset'], input_sizes)
-  
-  uncropped_params = [{
-    'name': f'{base_params["dataset"]}_uncropped_{s}',
-    'input_size': s,
-    'cropped': False,
-    **base_params
-  } for s in input_sizes]
-  cropped_params = [{
-    'name': f'{base_params["dataset"]}_cropped_{s}',
-    'input_size': s,
-    'cropped': True,
-    **base_params
-  } for s in input_sizes]
+for model in train.model_choices:
+  for base_params in params:
+    print(base_params)
+    params_copy = base_params.copy()
+    input_sizes = [size for size in all_input_sizes[model] if size <= params_copy['max_size']]
+    del params_copy['max_size']
+    
+    uncropped_params = [{
+      'name': f'{params_copy["dataset"]}_uncropped_{s}_{model}',
+      'model': model,
+      'input_size': s,
+      'cropped': False,
+      **params_copy
+    } for s in input_sizes]
 
-  for params in uncropped_params:
-    args = make_args(**params)
-    args = SimpleNamespace(**args)
-    if p.exists(p.join('logs', args.experiment_name)):
-      print(args.experiment_name, 'exists, skipping...')
-      continue
-    train.main(args)
+    params_copy['epochs'] //= 2 # cropped models train faster
+    cropped_params = [{
+      'name': f'{params_copy["dataset"]}_cropped_{s}_{model}',
+      'model': model,
+      'input_size': s,
+      'cropped': True,
+      **params_copy
+    } for s in input_sizes]
 
-  for params in cropped_params:
-    args = make_args(**params)
-    args = SimpleNamespace(**args)
-    if p.exists(p.join('logs', args.experiment_name)):
-      print(args.experiment_name, 'exists, skipping...')
-      continue
-    train.main(args)
+    for u_params in uncropped_params:
+      args = make_args(**u_params)
+      args = SimpleNamespace(**args)
+      if p.exists(p.join('logs', args.experiment_name)):
+        print(args.experiment_name, 'exists, skipping...')
+        continue
+      train.main(args)
+
+    for c_params in cropped_params:
+      args = make_args(**c_params)
+      args = SimpleNamespace(**args)
+      if p.exists(p.join('logs', args.experiment_name)):
+        print(args.experiment_name, 'exists, skipping...')
+        continue
+      train.main(args)

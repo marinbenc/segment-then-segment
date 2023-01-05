@@ -9,6 +9,9 @@ import torch
 import cv2 as cv
 import train
 
+import torch.nn.functional as F
+
+
 from test_utils import get_predictions, run_prediction, get_model, calculate_metrics, print_metrics
 
 def get_predictions_cropped(model, dataset, proposed_ys, device):
@@ -19,7 +22,10 @@ def get_predictions_cropped(model, dataset, proposed_ys, device):
     x, y, _ = dataset.get_file_data(i)
     y = y[0].detach().cpu().numpy()
     
-    y_pred = run_prediction_cropped(x, proposed_ys[i], y, model, dataset, device)    
+    y_pred = run_prediction_cropped(x, proposed_ys[i], y, model, dataset, device)
+    y_pred[y_pred < 0.5] = 0
+    y_pred[y_pred >= 0.5] = 1
+
     all_predicted_ys.append(y_pred)
 
     if x.shape[0] == 3:
@@ -43,6 +49,9 @@ def run_prediction_cropped(x, y_proposal, y, model, dataset, device):
       print(l, t, l + w, t + h, y.shape)
       continue
 
+    x_crop = F.interpolate(x_crop.unsqueeze(0), dataset.input_size)[0]
+    # plt.imshow(x_crop.squeeze().transpose(0, -1))
+    # plt.show()
     y_pred_crop = run_prediction(model, x_crop, device, dataset, original_size=(w, h))
     y_pred_crop[y_pred_crop < 0.5] = 0
     y_pred_crop[y_pred_crop >= 0.5] = 1
@@ -65,12 +74,17 @@ def main(args):
 
   time_start = timer()
   all_ys, all_predicted_ys = get_predictions(model, dataset, device)
+  print(all_predicted_ys[0].shape)
+
   time_uncropped = timer()
   all_xs, all_predicted_ys_cropped = get_predictions_cropped(cropped_model, dataset, all_predicted_ys, device)
   time_cropped = timer()
 
-  print('time uncropped: ', (time_uncropped - time_start) / len(dataset))
-  print('time cropped: ', (time_cropped - time_start) / len(dataset))
+  time_uncropped = (time_uncropped - time_start) / len(dataset)
+  time_cropped = (time_cropped - time_start) / len(dataset)
+
+  print('time uncropped: ', time_uncropped)
+  print('time cropped: ', time_cropped)
 
   metrics_uncropped = calculate_metrics(all_predicted_ys, all_ys)
   metrics_cropped = calculate_metrics(all_predicted_ys_cropped, all_ys)
@@ -88,7 +102,7 @@ def main(args):
   #   plt.imshow(all_predicted_ys_cropped[idx])
   #   plt.show()
   
-  return all_xs, all_ys, all_predicted_ys, all_predicted_ys_cropped, metrics_uncropped, metrics_cropped
+  return all_xs, all_ys, all_predicted_ys, all_predicted_ys_cropped, metrics_uncropped, metrics_cropped, time_uncropped, time_cropped
   
 
 if __name__ == '__main__':

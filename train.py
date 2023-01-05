@@ -13,6 +13,7 @@ import torch
 import torch.optim as optim
 from torch.nn import MSELoss
 from torch.utils.data import DataLoader
+from ignite.metrics import Loss
 from ignite.utils import setup_logger
 from ignite.handlers import ModelCheckpoint
 from ignite.contrib.handlers.tensorboard_logger import TensorboardLogger, global_step_from_engine
@@ -31,7 +32,7 @@ sys.path.append('data/polyp')
 from polyp_dataset import PolypDataset
 
 dataset_choices = ['aa', 'cells', 'polyp']
-model_choices = ['unet']
+model_choices = ['unet', 'resunetpp', 'deeplab']
 
 def main(args):
     log_dir = f'logs/{args.experiment_name }'
@@ -134,6 +135,10 @@ def get_dataset_class(args):
 def get_model(args, dataset_class, device):
     if args.model == 'unet':
         model = UNet('cuda', in_channels=dataset_class.in_channels, out_channels=dataset_class.out_channels, sigmoid_activation=True, input_size=None)
+    if args.model == 'resunetpp':
+        model = smp.UnetPlusPlus(encoder_name='resnet34', in_channels=dataset_class.in_channels, activation='sigmoid')
+    if args.model == 'deeplab':
+        model = smp.DeepLabV3Plus(encoder_name='resnet34', in_channels=dataset_class.in_channels, activation='sigmoid')
     return model
 
 def data_loaders(args, dataset_class):

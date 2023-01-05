@@ -63,8 +63,8 @@ def print_metrics(metrics):
 
 def run_prediction(model, x, device, dataset, original_size):
   x = x.to(device)
-  x = F.interpolate(x.unsqueeze(0), dataset.input_size)
-  prediction = model(x, output_size=original_size)
+  prediction = model(x.unsqueeze(0))
+  prediction = F.interpolate(prediction, original_size)
   prediction = prediction.squeeze(0).squeeze(0).detach().cpu().numpy()
   return prediction
 

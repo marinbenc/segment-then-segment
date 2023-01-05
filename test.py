@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import cv2 as cv
+
+import torch.nn.functional as F
+
 import train
 
 from test_utils import get_predictions, run_prediction, get_model, calculate_metrics, print_metrics, small_objects_img
@@ -41,7 +44,7 @@ def main(args):
         # plt.show()
     else:
       x, _ = dataset[i]
-      y_pred = run_prediction(model, x, device, dataset)
+      y_pred = run_prediction(model, x, device, dataset, original_size=y.shape[-2:])
     
     all_ys.append(y)
     all_predicted_ys.append(y_pred)
