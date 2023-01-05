@@ -2,7 +2,24 @@
 
 The code repository for the paper:
 
-TODO paper link
+Benčević, Marin, Yuming Qiu, Irena Galić, and Aleksandra Pizurica. 2023. "Segment-then-Segment: Context-Preserving Crop-Based Segmentation for Large Biomedical Images" Sensors 23, no. 2: 633. https://doi.org/10.3390/s23020633 https://www.mdpi.com/1424-8220/23/2/633
+
+BibTeX:
+
+```
+@Article{bencevic2023,
+AUTHOR = {Benčević, Marin and Qiu, Yuming and Galić, Irena and Pizurica, Aleksandra},
+TITLE = {Segment-then-Segment: Context-Preserving Crop-Based Segmentation for Large Biomedical Images},
+JOURNAL = {Sensors},
+VOLUME = {23},
+YEAR = {2023},
+NUMBER = {2},
+ARTICLE-NUMBER = {633},
+URL = {https://www.mdpi.com/1424-8220/23/2/633},
+ISSN = {1424-8220},
+DOI = {10.3390/s23020633}
+}
+```
 
 ## Requirements:
 
@@ -36,6 +53,10 @@ If, instead, you would like to only test one of the models use:
 ```python test.py -h```
 
 If you use the `--cropped` option the model will use ground-truth ideal crops. This can be seen as a best-case measure, or as a proxy result for using manual bounding boxes.
+
+To reproduce all of the experiments in the paper, use:
+
+```python test_all.py```
 
 ## Datasets
 
